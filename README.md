@@ -1,36 +1,104 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Blog SSG con rutas dinamicas y estaticas en Next.js
 
-## Getting Started
+Este proyecto muestra como construir un blog con App Router usando:
 
-First, run the development server:
+- Rutas estaticas
+- Rutas dinamicas
+- SSG (Static Site Generation)
+- `generateStaticParams()`
+- Fetch de API
+
+## Estructura de rutas
+
+```txt
+/posts
+/posts/[id]
+```
+
+1. `/posts`:
+Muestra una lista de articulos obtenidos desde una API.
+
+2. `/posts/[id]`:
+Muestra el detalle de un post segun el `id` en la URL.
+
+## Que es una ruta estatica
+
+Una ruta estatica es una pagina que Next.js genera durante el build y luego sirve como HTML ya listo.
+
+En este proyecto, `/posts` queda prerenderizada como estatica.
+
+## Que es una ruta dinamica
+
+Una ruta dinamica usa un segmento variable, por ejemplo `[id]`, para crear muchas paginas a partir de una sola plantilla.
+
+Ejemplos:
+
+- `/posts/1`
+- `/posts/2`
+- `/posts/3`
+
+## Como se vuelve estatica una ruta dinamica
+
+En `app/posts/[id]/page.js` se usa `generateStaticParams()` para decirle a Next.js que ids debe generar en build.
+
+```js
+export async function generateStaticParams() {
+	const res = await fetch("https://jsonplaceholder.typicode.com/posts");
+	const posts = await res.json();
+
+	return posts.slice(0, 10).map((post) => ({
+		id: post.id.toString(),
+	}));
+}
+```
+
+Con esto, Next.js prerenderiza `/posts/1` a `/posts/10` de forma estatica.
+
+## Flujo de datos
+
+1. `app/posts/page.js` hace fetch de posts para el listado.
+2. `app/posts/[id]/page.js` hace fetch de un post individual por `id`.
+3. Ambos se renderizan en servidor, y el detalle usa parametros estaticos durante build.
+
+## Ejecutar en local
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abrir:
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+```txt
+http://localhost:3000/posts
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Verificar generacion estatica
 
-## Learn More
+```bash
+npm run build
+```
 
-To learn more about Next.js, take a look at the following resources:
+En la salida deberias ver algo como:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```txt
+○ /posts
+● /posts/[id]
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `○` indica contenido estatico prerenderizado.
+- `●` indica ruta SSG con `generateStaticParams`.
 
-## Deploy on Vercel
+## Diferencia rapida: SSR vs SSG
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. SSR:
+Renderiza en cada request.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+2. SSG:
+Genera HTML antes de recibir visitas.
+
+## Ventajas de usar SSG en este caso
+
+- Carga mas rapida
+- Mejor SEO
+- Menor carga del servidor
+- Ideal para contenido que cambia poco

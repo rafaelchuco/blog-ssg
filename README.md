@@ -1,45 +1,48 @@
 # Blog SSG con rutas dinamicas y estaticas en Next.js
 
-Este proyecto muestra como construir un blog con App Router usando:
+Ejemplo practico para demostrar en VS Code como funciona el renderizado estatico con rutas dinamicas usando App Router.
+
+## Objetivo
+
+Construir un blog con dos rutas:
+
+- `/posts` para listar articulos
+- `/posts/[id]` para mostrar un articulo individual
+
+Las dos rutas se prerenderizan de forma estatica, y la dinamica usa `generateStaticParams()`.
+
+## Conceptos que cubre
 
 - Rutas estaticas
 - Rutas dinamicas
 - SSG (Static Site Generation)
 - `generateStaticParams()`
-- Fetch de API
+- Fetch de API en Server Components
 
-## Estructura de rutas
+## Estructura del proyecto
 
 ```txt
-/posts
-/posts/[id]
+app/
+	page.js
+	posts/
+		page.js
+		postTranslations.js
+		[id]/
+			page.js
 ```
 
-1. `/posts`:
-Muestra una lista de articulos obtenidos desde una API.
+## Como funciona cada ruta
 
-2. `/posts/[id]`:
-Muestra el detalle de un post segun el `id` en la URL.
+1. `/posts`
+Obtiene los posts desde JSONPlaceholder, toma los primeros 10 y muestra la lista.
 
-## Que es una ruta estatica
+2. `/posts/[id]`
+Muestra el detalle de un post segun el id en la URL.
 
-Una ruta estatica es una pagina que Next.js genera durante el build y luego sirve como HTML ya listo.
+3. `generateStaticParams()`
+Define que ids (1 al 10) se prerenderizan durante el build para crear HTML estatico de cada detalle.
 
-En este proyecto, `/posts` queda prerenderizada como estatica.
-
-## Que es una ruta dinamica
-
-Una ruta dinamica usa un segmento variable, por ejemplo `[id]`, para crear muchas paginas a partir de una sola plantilla.
-
-Ejemplos:
-
-- `/posts/1`
-- `/posts/2`
-- `/posts/3`
-
-## Como se vuelve estatica una ruta dinamica
-
-En `app/posts/[id]/page.js` se usa `generateStaticParams()` para decirle a Next.js que ids debe generar en build.
+## Ejemplo de generateStaticParams
 
 ```js
 export async function generateStaticParams() {
@@ -52,53 +55,71 @@ export async function generateStaticParams() {
 }
 ```
 
-Con esto, Next.js prerenderiza `/posts/1` a `/posts/10` de forma estatica.
+## Flujo SSG en este proyecto
 
-## Flujo de datos
+1. Next.js ejecuta `generateStaticParams()` en build.
+2. Next.js genera paginas para `/posts/1` a `/posts/10`.
+3. El usuario navega y recibe HTML ya generado.
+4. Resultado: carga rapida y mejor SEO.
 
-1. `app/posts/page.js` hace fetch de posts para el listado.
-2. `app/posts/[id]/page.js` hace fetch de un post individual por `id`.
-3. Ambos se renderizan en servidor, y el detalle usa parametros estaticos durante build.
-
-## Ejecutar en local
+## Levantar el proyecto
 
 ```bash
+npm install
 npm run dev
 ```
 
-Abrir:
+Abrir en navegador:
 
 ```txt
 http://localhost:3000/posts
 ```
 
-## Verificar generacion estatica
+## Verificar que realmente es estatico
+
+Ejecuta:
 
 ```bash
 npm run build
 ```
 
-En la salida deberias ver algo como:
+Debes ver una salida similar a esta:
 
 ```txt
-○ /posts
-● /posts/[id]
+Route (app)
+┌ ○ /posts
+└ ● /posts/[id]
 ```
 
-- `○` indica contenido estatico prerenderizado.
-- `●` indica ruta SSG con `generateStaticParams`.
+- `○` significa contenido estatico prerenderizado.
+- `●` significa SSG con `generateStaticParams`.
 
 ## Diferencia rapida: SSR vs SSG
 
-1. SSR:
-Renderiza en cada request.
+1. SSR
+Renderiza la pagina en cada request.
 
-2. SSG:
-Genera HTML antes de recibir visitas.
+2. SSG
+Renderiza durante el build y sirve HTML listo.
 
-## Ventajas de usar SSG en este caso
+## Por que SSG es buena opcion aqui
 
-- Carga mas rapida
-- Mejor SEO
-- Menor carga del servidor
-- Ideal para contenido que cambia poco
+- Los posts cambian poco.
+- Tiempo de carga mas bajo.
+- Menor costo de servidor.
+- SEO mas facil de optimizar.
+
+## Mini guion para exponer (60-90 segundos)
+
+1. Este proyecto tiene una ruta estatica (`/posts`) y una dinamica (`/posts/[id]`).
+2. En la ruta dinamica uso `generateStaticParams` para definir que ids se generan en build.
+3. Durante `npm run build`, Next crea HTML estatico para cada detalle de post.
+4. Esto mejora performance, SEO y reduce trabajo del servidor frente a SSR.
+
+## Scripts utiles
+
+```bash
+npm run dev    # desarrollo local
+npm run build  # build de produccion
+npm run start  # ejecutar build
+```
